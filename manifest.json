@@ -1,0 +1,7 @@
+{
+  "display_name": "Action Executor",
+  "author": "charchess",
+  "version": "1.0.0",
+  "description": "Détecte les blocs d'action dans les réponses de l'IA et les envoie à un webhook.",
+  "js": "index.js"
+}
