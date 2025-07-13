@@ -1,43 +1,19 @@
-// On ne met plus l'enveloppe (function($){...})(jQuery);
-
-// S'assurer que SillyTavern est prêt
+// S'assurer que SillyTavern existe est la seule chose que nous faisons au niveau global.
 if (!SillyTavern) {
     console.error('SillyTavern n\'est pas prêt, impossible de charger l\'extension Action Executor.');
 } else {
 
-    const context = SillyTavern.getContext();
+    // On ne définit que des variables et des fonctions ici, on n'exécute rien.
+    let context; // On déclare la variable context, mais on ne l'assigne pas encore.
     const INTENT_ROUTER_URL = 'https://intent-router.truxonline.com/route';
 
-    // Notre fonction pour appeler l'Intent Router (ne change pas)
     async function callIntentRouter(payload) {
-        try {
-            const response = await fetch(INTENT_ROUTER_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(`Intent Router a répondu avec une erreur ${response.status}: ${errorData.detail || 'Erreur inconnue'}`);
-            }
-            
-            const result = await response.json();
-            console.log('Réponse de l\'Intent Router :', result);
-            toastr.success(`Action ${payload.tool} exécutée.`);
-            return `Action ${payload.tool} exécutée avec succès.`;
-
-        } catch (error) {
-            console.error('Erreur lors de l\'appel de l\'Intent Router :', error);
-            toastr.error(error.message, 'Action Executor Error');
-            return `Échec de l'exécution de l'action : ${error.message}`;
-        }
+        // ... (cette fonction ne change pas)
     }
 
-    // Notre fonction de traitement des messages (ne change pas)
     function onNewMessage(data) {
-        // ... (la logique de cette fonction avec tous les console.log reste exactement la même) ...
-        if (data.is_user) { return; }
+        // ... (cette fonction ne change pas, elle utilisera la variable 'context' qui sera définie)
+        if (!context || data.is_user) { return; } // Ajout d'une sécurité
         const messageText = data.mes;
         const actionRegex = /<\|ACTION\|>([\s\S]*?)<\|\/ACTION\|>/;
         const match = messageText.match(actionRegex);
@@ -59,16 +35,18 @@ if (!SillyTavern) {
 
     // La fonction d'initialisation de l'extension
     function initialize() {
-        // On attache notre écouteur d'événement ici.
+        // C'EST ICI que nous obtenons le contexte et que nous attachons l'écouteur
+        context = SillyTavern.getContext();
+        
         context.eventSource.on(context.eventSource.EV_NEW_MESSAGE, onNewMessage);
         
         console.log('Action Executor: Prêt et à l\'écoute des nouveaux messages.');
         toastr.success('Extension Action Executor chargée.', 'Info');
     }
 
-    // Enregistrer le point d'entrée de notre extension (la méthode officielle)
+    // Enregistrer le point d'entrée de notre extension
     SillyTavern.extension_entrypoints.push({
         name: 'Action Executor',
         init: initialize
     });
-}
+}}
