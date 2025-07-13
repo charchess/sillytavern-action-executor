@@ -1,45 +1,45 @@
-(function () {
-    console.log('--- ACTION EXECUTOR: SCRIPT CHARGÉ (v2) ---');
+// Nous n'utilisons plus la fonction anonyme (function() { ... })();
+// pour rendre le script encore plus simple.
 
-    if (!SillyTavern) {
-        console.error('ACTION EXECUTOR: SillyTavern n\'est pas trouvé.');
+console.log('--- ACTION EXECUTOR: SCRIPT CHARGÉ (v3) ---');
+
+function initializeExtension() {
+    console.log('--- ACTION EXECUTOR: FONCTION INIT APPELÉE (v3) ---');
+
+    // Vérification de sécurité
+    if (!SillyTavern || !SillyTavern.getContext) {
+        console.error('ACTION EXECUTOR: SillyTavern ou son contexte ne sont pas disponibles.');
         return;
     }
 
-    // La fonction qui sera appelée à chaque nouveau message
+    const context = SillyTavern.getContext();
+
     function onNewMessage(data) {
-        // Pour l'instant, on se contente de logger le message reçu
-        console.log('--- ACTION EXECUTOR: NOUVEAU MESSAGE DÉTECTÉ ---');
-        console.log(data); // On affiche tout l'objet de données pour inspection
+        console.log('--- ACTION EXECUTOR: NOUVEAU MESSAGE DÉTECTÉ ---', data);
     }
 
-    // La fonction d'initialisation de l'extension
-    function initialize() {
-        console.log('--- ACTION EXECUTOR: FONCTION INIT APPELÉE (v2) ---');
-        
-        try {
-            const context = SillyTavern.getContext();
-
-            if (context && context.eventSource) {
-                // On attache notre fonction "onNewMessage" à l'événement EV_NEW_MESSAGE
-                context.eventSource.on(context.eventSource.EV_NEW_MESSAGE, onNewMessage);
-
-                console.log('--- ACTION EXECUTOR: Écouteur d\'événement attaché avec succès. ---');
-                toastr.success('Action Executor [ÉCOUTE ACTIVE]', 'Extension');
-            } else {
-                console.error('--- ACTION EXECUTOR: Contexte ou EventSource non disponible.');
-                toastr.error('Action Executor [ERREUR INIT]', 'Extension');
-            }
-        } catch (error) {
-            console.error('--- ACTION EXECUTOR: Erreur dans la fonction initialize ---', error);
-            toastr.error('Action Executor [ERREUR CRITIQUE]', 'Extension');
-        }
+    try {
+        context.eventSource.on(context.eventSource.EV_NEW_MESSAGE, onNewMessage);
+        console.log('--- ACTION EXECUTOR: Écouteur d\'événement attaché avec succès. ---');
+        toastr.success('Action Executor [ÉCOUTE ACTIVE]', 'Extension');
+    } catch (error) {
+        console.error('--- ACTION EXECUTOR: Erreur lors de l\'attachement de l\'écouteur.', error);
+        toastr.error('Action Executor [ERREUR INIT]', 'Extension');
     }
+}
 
-    // Enregistrer le point d'entrée de notre extension
-    SillyTavern.extension_entrypoints.push({
-        name: 'Action Executor',
-        init: initialize
-    });
-
-})();
+// C'est la méthode de l'extension "Dice".
+// On demande à jQuery d'attendre que la page soit prête avant de lancer notre initialisation.
+// C'est la manière la plus robuste de gérer le timing.
+$(document).ready(function () {
+    // On vérifie que la fonction pour s'enregistrer existe
+    if (SillyTavern && SillyTavern.extension_entrypoints) {
+        console.log('--- ACTION EXECUTOR: Document prêt. Enregistrement du point d\'entrée. ---');
+        SillyTavern.extension_entrypoints.push({
+            name: 'Action Executor',
+            init: initializeExtension
+        });
+    } else {
+        console.error('--- ACTION EXECUTOR: Impossible d\'enregistrer l\'extension, SillyTavern.extension_entrypoints n\'existe pas.');
+    }
+});
